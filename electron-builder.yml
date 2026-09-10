@@ -38,7 +38,7 @@ publish:
   provider: github
   owner: Atifsayyed077
   repo: businessdesk
-  private: true
+  private: false
 # For self-hosted PocketBase alternative, replace publish with:
 # publish:
 #   provider: generic
