@@ -34,14 +34,12 @@ nsis:
   createStartMenuShortcut: true
   shortcutName: BusinessDesk
 
-# publish disabled by default — updater will skip GitHub check (prevents 404 for placeholder)
-# To enable autoUpdate, uncomment and set your repo:
-# publish:
-#   provider: github
-#   owner: YOUR_GITHUB_USERNAME
-#   repo: businessdesk
-#   private: true
-# For self-hosted PocketBase alternative:
+publish:
+  provider: github
+  owner: Atifsayyed077
+  repo: businessdesk
+  private: true
+# For self-hosted PocketBase alternative, replace publish with:
 # publish:
 #   provider: generic
 #   url: https://your-pocketbase.com/api/files/updates
