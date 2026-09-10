@@ -88,19 +88,50 @@ export default function Backup() {
         Created: c.created ? new Date(c.created).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '',
       }));
 
-      const cleanBills = bills.map((b: any) => ({
-        ID: b.id,
-        'Bill Number': b.bill_number,
-        'Customer Name': b.customer_name,
-        'Customer Mobile': b.customer_mobile,
-        Date: b.date,
-        Subtotal: b.subtotal,
-        'Labour Total': b.labour_total,
-        Total: b.total,
-        'Payment Status': b.payment_status,
-        Notes: b.notes,
-        Created: b.created ? new Date(b.created).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '',
-      }));
+      // Build customer lookup for full detail join (bill history + customer info)
+      const customerById: Record<string, any> = {};
+      const customerByMobile: Record<string, any> = {};
+      customers.forEach((c: any) => {
+        customerById[c.id] = c;
+        if (c.mobile) customerByMobile[String(c.mobile)] = c;
+      });
+      // Group bill items by bill for summary
+      const billItemsByBill: Record<string, any[]> = {};
+      billItems.forEach((bi: any) => {
+        const bid = bi.bill_id || bi.bill;
+        if (!bid) return;
+        (billItemsByBill[bid] ||= []).push(bi);
+      });
+
+      const cleanBills = bills.map((b: any) => {
+        const custId = b.customer || b.customer_id || b.expand?.customer?.id || '';
+        const cust = customerById[custId] || customerByMobile[String(b.customer_mobile)] || null;
+        const items = billItemsByBill[b.id] || [];
+        const itemsSummary = items.map((it: any) => `${it.product_name} x${it.quantity} @${it.unit_price}=${it.total}`).join('; ');
+        const itemsCount = items.reduce((s: number, it: any) => s + Number(it.quantity || 0), 0);
+        return {
+          ID: b.id,
+          'Bill Number': b.bill_number,
+          Date: b.date,
+          'Customer ID': cust?.id || custId || '',
+          'Customer Name': b.customer_name,
+          'Customer Mobile': b.customer_mobile,
+          'Customer Email': cust?.email || b.customer_email || '',
+          'Customer Address': cust?.address || b.customer_address || '',
+          'Items Count': itemsCount,
+          'Items Summary': itemsSummary || '-',
+          Subtotal: b.subtotal,
+          'Labour Total': b.labour_total,
+          Total: b.total,
+          'Paid Amount': b.paid_amount ?? (b.payment_status === 'Paid' ? b.total : 0),
+          'Remaining Amount': b.remaining_amount ?? (b.payment_status === 'Paid' ? 0 : b.total),
+          'Payment Status': b.payment_status,
+          'Payment Method': b.payment_method || '',
+          'Due Date': b.due_date || '',
+          Notes: b.notes,
+          Created: b.created ? new Date(b.created).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '',
+        };
+      });
 
       const cleanBillItems = billItems.map((bi: any) => ({
         ID: bi.id,
@@ -334,6 +365,67 @@ export default function Backup() {
       });
       customerHistoryData.sort((a, b) => b['Total Purchase (₹)'] - a['Total Purchase (₹)']);
 
+      // Bill History Full Detail — one row per bill-item joined with bill + customer (full audit, line-item level)
+      // Build bill lookup for join
+      const billById: Record<string, any> = {};
+      bills.forEach((b: any) => { billById[b.id] = b; });
+      const billHistoryFull = billItems.map((bi: any) => {
+        const bid = bi.bill_id || bi.bill;
+        const bill = billById[bid] || {};
+        const custId = bill.customer || bill.customer_id || bill.expand?.customer?.id || '';
+        const cust = customerById[custId] || customerByMobile[String(bill.customer_mobile)] || null;
+        return {
+          'Bill Number': bill.bill_number || '',
+          Date: bill.date || '',
+          'Bill ID': bid || '',
+          'Customer ID': cust?.id || custId || '',
+          'Customer Name': bill.customer_name || cust?.name || '',
+          'Customer Mobile': bill.customer_mobile || cust?.mobile || '',
+          'Customer Email': cust?.email || bill.customer_email || '',
+          'Customer Address': cust?.address || bill.customer_address || '',
+          'Bill Total (₹)': bill.total || '',
+          'Payment Status': bill.payment_status || '',
+          'Payment Method': bill.payment_method || '',
+          'Due Date': bill.due_date || '',
+          'Product Name': bi.product_name || '',
+          'Product ID': bi.product_id || bi.product || '',
+          Quantity: bi.quantity,
+          'Unit Price (₹)': bi.unit_price,
+          'Labour (₹)': bi.labour_charge || 0,
+          'Item Total (₹)': bi.total,
+          'Bill Notes': bill.notes || '',
+        };
+      });
+      // Also include bills without items (pure service bills) as single row
+      bills.forEach((b: any) => {
+        if ((billItemsByBill[b.id] || []).length === 0) {
+          const custId = b.customer || b.customer_id || b.expand?.customer?.id || '';
+          const cust = customerById[custId] || customerByMobile[String(b.customer_mobile)] || null;
+          billHistoryFull.push({
+            'Bill Number': b.bill_number || '',
+            Date: b.date || '',
+            'Bill ID': b.id || '',
+            'Customer ID': cust?.id || custId || '',
+            'Customer Name': b.customer_name || cust?.name || '',
+            'Customer Mobile': b.customer_mobile || cust?.mobile || '',
+            'Customer Email': cust?.email || '',
+            'Customer Address': cust?.address || '',
+            'Bill Total (₹)': b.total || '',
+            'Payment Status': b.payment_status || '',
+            'Payment Method': b.payment_method || '',
+            'Due Date': b.due_date || '',
+            'Product Name': '-',
+            'Product ID': '-',
+            Quantity: 0,
+            'Unit Price (₹)': 0,
+            'Labour (₹)': 0,
+            'Item Total (₹)': 0,
+            'Bill Notes': b.notes || '',
+          });
+        }
+      });
+      billHistoryFull.sort((a: any, b: any) => String(a.Date).localeCompare(String(b.Date)) || String(a['Bill Number']).localeCompare(String(b['Bill Number'])));
+
       // Create sheets
       const addSheet = (data: any[], name: string) => {
         const ws = XLSX.utils.json_to_sheet(data.length > 0 ? data : [{ Info: `No ${name} data` }]);
@@ -386,8 +478,9 @@ export default function Backup() {
 
       addSheet(cleanProducts, 'Products');
       addSheet(cleanCustomers, 'Customers');
-      addSheet(cleanBills, 'Bills');
+      addSheet(cleanBills, 'Bills - Full Customer');
       addSheet(cleanBillItems, 'Bill Items');
+      addSheet(billHistoryFull, 'Bill History Full');
       // Daily sheets
       addSheet(dailySalesData, 'Daily Sales');
       addSheet(dailyCustomerData, 'Daily Customer Purchase');
@@ -583,7 +676,7 @@ export default function Backup() {
             </button>
           </div>
         </div>
-        <p className="text-xs text-gray-400 mt-3">Excel contains 12 sheets: Summary, Products, Customers, Bills, Bill Items, <b>Daily Sales, Daily Customer Purchase, Daily Product Sales, Monthly Sales, Monthly Customer Bills, Customer Purchase History</b>, Settings, SMS Logs — with daily customer/product and end-of-month totals.</p>
+        <p className="text-xs text-gray-400 mt-3">Excel contains 14 sheets: Summary, Products, Customers, <b>Bills - Full Customer (bill + full customer info)</b>, Bill Items, <b>Bill History Full (one row per line-item with bill + customer joined)</b>, Daily Sales, Daily Customer Purchase, Daily Product Sales, Monthly Sales, Monthly Customer Bills, Customer Purchase History, Settings, SMS Logs — with full customer detail (ID, email, address, items summary, paid/remaining, method).</p>
       </div>
 
       {/* Database Info */}
