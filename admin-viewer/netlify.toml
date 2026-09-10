@@ -1,0 +1,16 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Allow embedding on Netlify preview; PocketBase CORS still governs API
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+
+# SPA fallback: Netlify will use public/_redirects (/* /index.html 200) — keep for explicitness
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

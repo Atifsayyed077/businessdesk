@@ -1,0 +1,19 @@
+{
+  "name": "admin-viewer",
+  "private": true,
+  "version": "1.0.0",
+  "description": "BusinessDesk Admin Read-Only Viewer — static site fetching from https://my-pocketbase-app.loca.lt",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5174 --host",
+    "build": "vite build",
+    "preview": "vite preview --port 4174 --host",
+    "serve": "vite preview --port 4174 --host"
+  },
+  "dependencies": {
+    "pocketbase": "^0.28.0"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  }
+}

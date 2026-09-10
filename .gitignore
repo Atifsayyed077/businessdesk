@@ -1,0 +1,40 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# BusinessDesk - do not commit large binaries / build outputs
+release/
+release2/
+BusinessDesk-Portable/
+BusinessDesk-Portable.zip
+*.zip
+7z*.exe
+pocketbase/pb_data/
+pocketbase/data.db
+admin-viewer/dist/
+admin-viewer/node_modules/
+temp7z/
+temp7za/
+.env
+BusinessDesk-Portable.zip

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>BusinessDesk — Admin Viewer (Read-Only)</title>
+    <meta name="description" content="Read-only admin viewer fetching from https://my-pocketbase-app.loca.lt — bills, dashboard, search" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- Tailwind CDN for static deploy without build step; Vite build also includes src/style.css -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { theme: { extend: { screens: { xs: '360px' } } } }
+    </script>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased">
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

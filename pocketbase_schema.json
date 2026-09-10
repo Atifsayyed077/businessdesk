@@ -1,0 +1,96 @@
+{
+  "collections": [
+    {
+      "name": "products",
+      "type": "base",
+      "fields": [
+        { "name": "name", "type": "text", "required": true },
+        { "name": "sku", "type": "text", "required": true, "unique": true },
+        { "name": "category", "type": "text", "required": false },
+        { "name": "purchase_price", "type": "number", "required": false },
+        { "name": "selling_price", "type": "number", "required": true },
+        { "name": "labour_charge", "type": "number", "required": false },
+        { "name": "stock", "type": "number", "required": false },
+        { "name": "min_stock", "type": "number", "required": false },
+        { "name": "unit", "type": "select", "required": false, "values": ["pcs","kg","g","litre","ml","box","bag","roll","carton","pair","set","units"] },
+        { "name": "description", "type": "text", "required": false }
+      ],
+      "listRule": "@request.auth.id != ''",
+      "viewRule": "@request.auth.id != ''",
+      "createRule": "@request.auth.id != ''",
+      "updateRule": "@request.auth.id != ''",
+      "deleteRule": "@request.auth.id != ''"
+    },
+    {
+      "name": "customers",
+      "type": "base",
+      "fields": [
+        { "name": "name", "type": "text", "required": true },
+        { "name": "mobile", "type": "text", "required": true },
+        { "name": "email", "type": "email", "required": false },
+        { "name": "address", "type": "text", "required": false }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_customers_mobile ON customers (mobile)"],
+      "listRule": "@request.auth.id != ''",
+      "viewRule": "@request.auth.id != ''",
+      "createRule": "@request.auth.id != ''",
+      "updateRule": "@request.auth.id != ''",
+      "deleteRule": "@request.auth.id != ''"
+    },
+    {
+      "name": "bills",
+      "type": "base",
+      "fields": [
+        { "name": "bill_number", "type": "text", "required": true, "unique": true },
+        { "name": "customer", "type": "relation", "required": false, "collectionId": "customers", "cascadeDelete": false },
+        { "name": "customer_name", "type": "text", "required": true },
+        { "name": "customer_mobile", "type": "text", "required": true },
+        { "name": "date", "type": "date", "required": true },
+        { "name": "subtotal", "type": "number", "required": false },
+        { "name": "labour_total", "type": "number", "required": false },
+        { "name": "total", "type": "number", "required": true },
+        { "name": "payment_status", "type": "select", "required": true, "values": ["Paid","Pending"] },
+        { "name": "notes", "type": "text", "required": false }
+      ],
+      "listRule": "@request.auth.id != ''",
+      "viewRule": "@request.auth.id != ''",
+      "createRule": "@request.auth.id != ''",
+      "updateRule": "@request.auth.id != ''",
+      "deleteRule": "@request.auth.id != ''"
+    },
+    {
+      "name": "bill_items",
+      "type": "base",
+      "fields": [
+        { "name": "bill", "type": "relation", "required": true, "collectionId": "bills", "cascadeDelete": true },
+        { "name": "bill_id", "type": "text", "required": false },
+        { "name": "product", "type": "relation", "required": false, "collectionId": "products", "cascadeDelete": false },
+        { "name": "product_id", "type": "text", "required": false },
+        { "name": "product_name", "type": "text", "required": true },
+        { "name": "quantity", "type": "number", "required": true },
+        { "name": "unit_price", "type": "number", "required": true },
+        { "name": "labour_charge", "type": "number", "required": false },
+        { "name": "total", "type": "number", "required": true }
+      ],
+      "listRule": "@request.auth.id != ''",
+      "viewRule": "@request.auth.id != ''",
+      "createRule": "@request.auth.id != ''",
+      "updateRule": "@request.auth.id != ''",
+      "deleteRule": "@request.auth.id != ''"
+    },
+    {
+      "name": "settings",
+      "type": "base",
+      "fields": [
+        { "name": "key", "type": "text", "required": true, "unique": true },
+        { "name": "value", "type": "text", "required": false }
+      ],
+      "listRule": "@request.auth.id != ''",
+      "viewRule": "@request.auth.id != ''",
+      "createRule": "@request.auth.id != ''",
+      "updateRule": "@request.auth.id != ''",
+      "deleteRule": "@request.auth.id != ''"
+    }
+  ],
+  "notes": "Create these collections in PocketBase Admin UI at http://127.0.0.1:8090/_ . For users collection, add custom field 'role' (text) and enable auth."
+}

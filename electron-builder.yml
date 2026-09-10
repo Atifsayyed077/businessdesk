@@ -1,0 +1,47 @@
+appId: com.businessdesk.store
+productName: BusinessDesk
+copyright: Copyright © 2026 BusinessDesk
+
+directories:
+  buildResources: build
+  output: release
+
+files:
+  - dist/**/*
+  - electron/dist/**/*
+  - package.json
+
+extraMetadata:
+  main: electron/dist/main.js
+
+# Windows signing: disabled (no certificate). winCodeSign download is skipped when
+# CSC_IDENTITY_AUTO_DISCOVERY=false is set (see package.json exe scripts).
+# If you add a code-sign certificate later, remove sign=null and set CSC vars.
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  # icon: build/icon.ico  # uncomment and add 256x256 .ico at build/icon.ico to replace default Electron icon
+  sign: null
+  signAndEditExecutable: false
+  verifyUpdateCodeSignature: false
+  forceCodeSigning: false
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: BusinessDesk
+
+# publish disabled by default — updater will skip GitHub check (prevents 404 for placeholder)
+# To enable autoUpdate, uncomment and set your repo:
+# publish:
+#   provider: github
+#   owner: YOUR_GITHUB_USERNAME
+#   repo: businessdesk
+#   private: true
+# For self-hosted PocketBase alternative:
+# publish:
+#   provider: generic
+#   url: https://your-pocketbase.com/api/files/updates
