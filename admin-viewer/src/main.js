@@ -97,14 +97,15 @@ async function fetchStats(allBills) {
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD
   const firstOfMonth = new Date(); firstOfMonth.setDate(1);
   const monthStart = firstOfMonth.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-  const todaySales = allBills.filter(b=> b.date===today).reduce((s,b)=> s+Number(b.total||0),0);
-  const monthly = allBills.filter(b=> (b.date||'') >= monthStart).reduce((s,b)=> s+Number(b.total||0),0);
+  const toISODate = d => String(d||'').trim().split(' ')[0].split('T')[0];
+  const todaySales = allBills.filter(b=> toISODate(b.date)===today).reduce((s,b)=> s+Number(b.total||0),0);
+  const monthly = allBills.filter(b=> toISODate(b.date) >= monthStart).reduce((s,b)=> s+Number(b.total||0),0);
   const pending = allBills.filter(b=> b.payment_status==='Pending').reduce((s,b)=> s+Number(b.total||0),0);
   let products=[], customers=[];
   try { products = await pb.collection('products').getFullList(); } catch {}
   try { customers = await pb.collection('customers').getFullList(); } catch {}
   const lowStock = products.filter(p=> Number(p.stock||0) <= Number(p.min_stock||10)).length;
-  return { todaySales, monthly, pending, lowStock, totalProducts: products.length, totalCustomers: customers.length, todayCount: allBills.filter(b=> b.date===today).length, totalBills: allBills.length };
+  return { todaySales, monthly, pending, lowStock, totalProducts: products.length, totalCustomers: customers.length, todayCount: allBills.filter(b=> toISODate(b.date)===today).length, totalBills: allBills.length };
 }
 
 // === Render ===

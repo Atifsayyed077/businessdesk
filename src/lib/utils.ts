@@ -501,13 +501,21 @@ export async function getDashboardStats() {
       pb.collection('customers').getFullList().catch((e: any) => { logPbError('getDashboardStats customers', e); return []; }),
     ]);
 
-    const todaySales = allBills.filter((b: any) => b.date === today).reduce((s: number, b: any) => s + Number(b.total || 0), 0);
-    const todayBillCount = allBills.filter((b: any) => b.date === today).length;
+    // Normalize bill date: PocketBase stores date as "2026-09-11 00:00:00.000Z" — compare only YYYY-MM-DD part
+    const toISODate = (d: any) => String(d || '').trim().split(' ')[0].split('T')[0];
+    const todaySales = allBills.filter((b: any) => toISODate(b.date) === today).reduce((s: number, b: any) => s + Number(b.total || 0), 0);
+    const todayBillCount = allBills.filter((b: any) => toISODate(b.date) === today).length;
     const totalProducts = products.length;
     const lowStock = products.filter((p: any) => Number(p.stock || 0) <= Number(p.min_stock || 10)).length;
     const totalCustomers = customers.length;
-    const monthlySales = allBills.filter((b: any) => (b.date || '') >= monthStart).reduce((s: number, b: any) => s + Number(b.total || 0), 0);
+    const monthlySales = allBills.filter((b: any) => toISODate(b.date) >= monthStart).reduce((s: number, b: any) => s + Number(b.total || 0), 0);
     const pendingPayments = allBills.filter((b: any) => b.payment_status === 'Pending').reduce((s: number, b: any) => s + Number(b.total || 0), 0);
+
+    // Debug: helps diagnose "today's sales 0" — will show in console when PB data mismatched
+    if (allBills.length > 0) {
+      const sample = allBills.slice(0,3).map((b:any)=> ({ bill: b.bill_number, raw: b.date, norm: toISODate(b.date)}));
+      console.log('[Dashboard] today:', today, 'monthStart:', monthStart, 'bills:', allBills.length, 'sample:', sample);
+    }
 
     return { todaySales, totalProducts, lowStock, totalCustomers, monthlySales, pendingPayments, todayBillCount };
   } catch (e: any) {
