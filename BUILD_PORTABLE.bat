@@ -28,18 +28,15 @@ if not exist "%ROOT%\pocketbase\pocketbase.exe" (
     if exist "%ROOT%\pocketbase\pb_data" xcopy /e /i /y "%ROOT%\pocketbase\pb_data" "%OUT%\pocketbase\pb_data\" >nul
 )
 
-echo [2/5] Copying App (release)...
+echo [2/5] Copying App (single release)...
 set "SRC_EXE="
 if exist "%ROOT%\release\win-unpacked\BusinessDesk.exe" set "SRC_EXE=%ROOT%\release\win-unpacked"
-if exist "%ROOT%\release2\win-unpacked\BusinessDesk.exe" set "SRC_EXE=%ROOT%\release2\win-unpacked"
-if exist "%LOCALAPPDATA%\opencode\bd-release\win-unpacked\BusinessDesk.exe" if not defined SRC_EXE set "SRC_EXE=%LOCALAPPDATA%\opencode\bd-release\win-unpacked"
 if not defined SRC_EXE (
-    echo [WARN] No built EXE found — building now...
+    echo [WARN] No built EXE found — building now (single release, no release2)...
     pushd "%ROOT%"
     call npm run exe
     popd
     if exist "%ROOT%\release\win-unpacked\BusinessDesk.exe" set "SRC_EXE=%ROOT%\release\win-unpacked"
-    if exist "%ROOT%\release2\win-unpacked\BusinessDesk.exe" set "SRC_EXE=%ROOT%\release2\win-unpacked"
 )
 if defined SRC_EXE (
     echo       From: %SRC_EXE%
