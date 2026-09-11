@@ -66,7 +66,8 @@ if (code !== 0) process.exit(code);
 // 4. Run electron-builder
 const outDir = useTemp ? TEMP_OUT : RELEASE;
 log(`running electron-builder → ${outDir}`);
-const builderArgs = ['electron-builder', '--win', 'nsis', '--publish', 'never', '--config.directories.output=' + outDir];
+const outArg = outDir.includes(' ') ? `"${outDir}"` : outDir;
+const builderArgs = ['electron-builder', '--win', 'nsis', '--publish', 'never', `--config.directories.output=${outArg}`];
 code = run('npx', ['--yes', ...builderArgs], {
   cwd: ROOT,
   env: { ...process.env, CSC_IDENTITY_AUTO_DISCOVERY: 'false' }
@@ -74,7 +75,13 @@ code = run('npx', ['--yes', ...builderArgs], {
 
 if (code !== 0) process.exit(code);
 
-const exeName = 'BusinessDesk Setup 0.0.1.exe';
+let version = '0.0.1';
+try {
+  const { readFileSync } = await import('node:fs');
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8'));
+  version = pkg.version || version;
+} catch {}
+const exeName = `BusinessDesk Setup ${version}.exe`;
 const builtExe = join(outDir, exeName);
 if (existsSync(builtExe)) {
   const { statSync } = await import('node:fs');

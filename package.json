@@ -15,7 +15,7 @@
     "electron": "electron electron/dist/main.js",
     "exe": "node scripts/build-exe.mjs",
     "exe:legacy": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false npm run build:electron && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis --publish never",
-    "exe:publish": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false npm run build:electron && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis --publish always",
+    "exe:publish": "node scripts/publish-exe.mjs",
     "exe:clean": "node scripts/clean-release.mjs && rimraf dist electron/dist && rimraf \"%LOCALAPPDATA%\\electron-builder\\Cache\\winCodeSign\"",
     "lint": "oxlint"
   },
