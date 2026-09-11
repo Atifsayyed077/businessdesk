@@ -85,12 +85,12 @@ REM ================= Functions =================
 :stepNode
 echo [1/4] Checking Node.js...
 where node >nul 2>nul
-if %errorlevel% equ 0 (
-    for /f "tokens=*" %%v in ('node -v 2^>nul') do echo [OK] Node.js %%v
-    echo [OK] Node found, skipping install
-    >>"%LOG%" echo Node OK
-    goto :eof
-)
+if %errorlevel% neq 0 goto :checkPortableNode
+for /f "tokens=*" %%v in ('node -v 2>nul') do echo [OK] Node.js %%v
+echo [OK] Node found, skipping install
+echo Node OK >>"%LOG%"
+goto :eof
+:checkPortableNode
 if exist "%NODE_PORTABLE%" (
     echo [OK] Portable Node at %NODE_PORTABLE%
     set "PATH=%ROOT%\nodejs;%PATH%"
@@ -119,28 +119,15 @@ if exist "%NODE_PORTABLE%" (
 )
 echo [ERROR] Node.js auto-install failed.
 echo         Please install from https://nodejs.org and re-run
->>"%LOG%" echo Node install failed
+    echo Node install failed >>"%LOG%"
 exit /b 1
 
 :stepPocketBase
 echo.
 echo [2/4] Checking PocketBase...
-if exist "%PB_EXE%" (
-    echo [OK] Found %PB_EXE%
-    goto :eof
-)
-if exist "%PB_EXE_LEGACY%" (
-    echo [OK] Found legacy %PB_EXE_LEGACY%
-    set "PB_DIR=%PB_DIR_LEGACY%"
-    set "PB_EXE=%PB_EXE_LEGACY%"
-    goto :eof
-)
-if exist "%ROOT%\pocketbase.exe" (
-    set "PB_EXE=%ROOT%\pocketbase.exe"
-    set "PB_DIR=%ROOT%"
-    echo [OK] Found %PB_EXE%
-    goto :eof
-)
+if exist "%PB_EXE%" echo [OK] Found %PB_EXE% & goto :eof
+if exist "%PB_EXE_LEGACY%" echo [OK] Found legacy %PB_EXE_LEGACY% & set "PB_DIR=%PB_DIR_LEGACY%" & set "PB_EXE=%PB_EXE_LEGACY%" & goto :eof
+if exist "%ROOT%\pocketbase.exe" set "PB_EXE=%ROOT%\pocketbase.exe" & set "PB_DIR=%ROOT%" & echo [OK] Found !PB_EXE! & goto :eof
 echo [SETUP] Downloading PocketBase v0.40.2 to %PB_DIR% ...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; $u='%PB_URL%'; $o='%PB_ZIP%'; $d='%PB_DIR%'; New-Item -ItemType Directory -Path $d -Force | Out-Null; Invoke-WebRequest -Uri $u -OutFile $o -UseBasicParsing; Expand-Archive -LiteralPath $o -DestinationPath $d -Force" >>"%LOG%" 2>&1
 if exist "%PB_EXE%" (
@@ -148,7 +135,7 @@ if exist "%PB_EXE%" (
     del /q "%PB_ZIP%" 2>nul
     goto :eof
 )
-for /f "delims=" %%f in ('dir /s /b "%PB_DIR%\pocketbase.exe" 2^>nul') do (
+for /f "delims=" %%f in ('dir /s /b "%PB_DIR%\pocketbase.exe" 2>nul') do (
     set "PB_EXE=%%f"
     echo [OK] Found at %%f
     goto :eof
