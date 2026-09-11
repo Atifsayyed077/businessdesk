@@ -47,14 +47,12 @@ if %NODE_OK% neq 0 (
     echo [WARN] Node.js auto-install failed — tunnel/build skipped, PB+EXE still work if present.
 )
 
-REM --- Resolve EXE early (for auto-build check) ---
-set "EXE_PATH="
-if exist "%ROOT%\BusinessDesk\BusinessDesk.exe" set "EXE_PATH=%ROOT%\BusinessDesk\BusinessDesk.exe"
-if exist "%ROOT%\release\win-unpacked\BusinessDesk.exe" set "EXE_PATH=%ROOT%\release\win-unpacked\BusinessDesk.exe"
-if exist "%ROOT%\release2\win-unpacked\BusinessDesk.exe" set "EXE_PATH=%ROOT%\release2\win-unpacked\BusinessDesk.exe"
-if exist "%LOCALAPPDATA%\opencode\bd-release\win-unpacked\BusinessDesk.exe" if not defined EXE_PATH set "EXE_PATH=%LOCALAPPDATA%\opencode\bd-release\win-unpacked\BusinessDesk.exe"
+REM --- Resolve newest EXE (by LastWriteTime) ---
+call :findNewestExe
 if not defined EXE_PATH (
     echo [SETUP] No EXE found — will try build after PB start (needs Node)...
+) else (
+    for %%F in ("!EXE_PATH!") do echo [OK] Newest EXE: !EXE_PATH! (%%~tF)
 )
 
 echo.
@@ -82,21 +80,19 @@ if %NODE_OK% equ 0 (
 )
 
 echo.
-echo [3/3] Launching BusinessDesk EXE...
+echo [3/3] Launching newest BusinessDesk EXE...
 if not defined EXE_PATH (
     if %NODE_OK% equ 0 (
         echo [SETUP] Building EXE (one-time)...
         pushd "%ROOT%"
         call npm run exe
         popd
-        if exist "%ROOT%\release\win-unpacked\BusinessDesk.exe" set "EXE_PATH=%ROOT%\release\win-unpacked\BusinessDesk.exe"
-        if exist "%ROOT%\release2\win-unpacked\BusinessDesk.exe" set "EXE_PATH=%ROOT%\release2\win-unpacked\BusinessDesk.exe"
-        if exist "%LOCALAPPDATA%\opencode\bd-release\win-unpacked\BusinessDesk.exe" set "EXE_PATH=%LOCALAPPDATA%\opencode\bd-release\win-unpacked\BusinessDesk.exe"
-        if exist "%ROOT%\BusinessDesk\BusinessDesk.exe" set "EXE_PATH=%ROOT%\BusinessDesk\BusinessDesk.exe"
+        call :findNewestExe
     )
 )
 if defined EXE_PATH (
-    echo [OK] Launching EXE: !EXE_PATH!
+    echo [OK] Launching newest EXE: !EXE_PATH!
+    for %%F in ("!EXE_PATH!") do echo       Modified: %%~tF
     timeout /t 2 /nobreak >nul
     start "" "!EXE_PATH!"
 ) else (
@@ -129,6 +125,11 @@ if %NODE_OK% equ 0 timeout /t 2 /nobreak >nul & start https://my-pocketbase-app.
 
 echo Done! Keep 3 windows open (PB, Tunnel, EXE). Close them to stop.
 pause
+goto :eof
+
+:findNewestExe
+set "EXE_PATH="
+for /f "delims=" %%E in ('powershell -NoProfile -Command "$c=@('%ROOT%\release\win-unpacked\BusinessDesk.exe','%ROOT%\release2\win-unpacked\BusinessDesk.exe','%ROOT%\BusinessDesk\BusinessDesk.exe','%LOCALAPPDATA%\opencode\bd-release\win-unpacked\BusinessDesk.exe','%TEMP%\opencode\bd-release\win-unpacked\BusinessDesk.exe','%ProgramFiles%\BusinessDesk\BusinessDesk.exe'); $f=$c | Where-Object { Test-Path $_ } | ForEach-Object { Get-Item $_ } | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if ($f) { Write-Host $f.FullName }"') do set "EXE_PATH=%%E"
 goto :eof
 
 REM ============================================================
