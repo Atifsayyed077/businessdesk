@@ -18,21 +18,21 @@ if not exist "%ROOT%\pocketbase\pocketbase.exe" (
     if exist "C:\pocketbase_0.40.2_windows_amd64\pocketbase.exe" (
         mkdir "%OUT%\pocketbase" 2>nul
         copy /y "C:\pocketbase_0.40.2_windows_amd64\pocketbase.exe" "%OUT%\pocketbase\" >nul
-        if exist "C:\pocketbase_0.40.2_windows_amd64\pb_data" xcopy /e /i /y "C:\pocketbase_0.40.2_windows_amd64\pb_data" "%OUT%\pocketbase\pb_data\" >nul
+        if exist "C:\pocketbase_0.40.2_windows_amd64\pb_data" xcopy /e /i /y "C:\pocketbase_0.40.2_windows_amd64\pb_data" "%OUT%\pocketbase\pb_data" >nul
     ) else (
         echo [WARN] No pocketbase.exe found — will be auto-downloaded on target PC (needs internet)
     )
 ) else (
     mkdir "%OUT%\pocketbase" 2>nul
     copy /y "%ROOT%\pocketbase\pocketbase.exe" "%OUT%\pocketbase\" >nul
-    if exist "%ROOT%\pocketbase\pb_data" xcopy /e /i /y "%ROOT%\pocketbase\pb_data" "%OUT%\pocketbase\pb_data\" >nul
+    if exist "%ROOT%\pocketbase\pb_data" xcopy /e /i /y "%ROOT%\pocketbase\pb_data" "%OUT%\pocketbase\pb_data" >nul
 )
 
-echo [2/5] Copying App (single release)...
+echo [2/5] Copying App ^(single release^)...
 set "SRC_EXE="
 if exist "%ROOT%\release\win-unpacked\BusinessDesk.exe" set "SRC_EXE=%ROOT%\release\win-unpacked"
 if not defined SRC_EXE (
-    echo [WARN] No built EXE found — building now (single release, no release2)...
+    echo [WARN] No built EXE found — building now ^(single release, no release2^)...
     pushd "%ROOT%"
     call npm run exe
     popd
@@ -40,15 +40,27 @@ if not defined SRC_EXE (
 )
 if defined SRC_EXE (
     echo       From: %SRC_EXE%
-    xcopy /e /i /y "%SRC_EXE%" "%OUT%\BusinessDesk\" >nul
+    xcopy /e /i /y "%SRC_EXE%" "%OUT%\BusinessDesk" >nul
     echo [OK] Copied BusinessDesk to %OUT%\BusinessDesk\
 ) else (
     echo [ERROR] No EXE to bundle. Build failed.
 )
 
-echo [3/5] Copying start.bat (universal)...
+echo [3/5] Copying bat files (start, test, install, servers)...
 copy /y "%ROOT%\start.bat" "%OUT%\start.bat" >nul
+copy /y "%ROOT%\start-servers.bat" "%OUT%\start-servers.bat" >nul
+copy /y "%ROOT%\install.bat" "%OUT%\install.bat" >nul
+copy /y "%ROOT%\test.bat" "%OUT%\test.bat" >nul
 copy /y "%ROOT%\BUILD_PORTABLE.bat" "%OUT%\BUILD_PORTABLE.bat" 2>nul
+if exist "%ROOT%\nodejs" (
+    echo       Copying portable Node ^(offline, no download on target^)...
+    xcopy /e /i /y "%ROOT%\nodejs" "%OUT%\nodejs" >nul
+)
+if exist "%ROOT%\node_modules\.bin\lt.cmd" (
+    echo       Copying tunnel deps ^(for offline skip^)...
+    mkdir "%OUT%\node_modules\.bin" 2>nul
+    copy /y "%ROOT%\node_modules\.bin\lt*" "%OUT%\node_modules\.bin\" >nul 2>&1
+)
 
 echo [4/5] Creating README...
 powershell -NoProfile -Command "Set-Content -LiteralPath '%OUT%\README.txt' -Value @('BusinessDesk Portable - USB / Any PC','================================','1. Copy this entire BusinessDesk-Portable folder to target PC / USB','2. Double-click start.bat','3. First run on new PC: if no Node, start.bat auto-installs portable Node to .\nodejs\ ^(no admin^) or uses winget','4. PocketBase auto-starts from .\pocketbase\pocketbase.exe ^(pb_data stays portable^)','5. EXE launches from .\BusinessDesk\BusinessDesk.exe - no install needed','','Offline? The bundle includes pocketbase.exe + BusinessDesk.exe so it works without internet.','Tunnel ^(npx lt^) needs internet - if offline, just use http://127.0.0.1:8090 locally.','','If SmartScreen blocks exe: Right-click BusinessDesk.exe - Properties - Unblock.')"
