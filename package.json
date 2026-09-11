@@ -1,7 +1,7 @@
 {
   "name": "store-manager",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "BusinessDesk - Inventory & Billing (Thermal POS)",
   "author": "BusinessDesk",
   "main": "electron/dist/main.js",
